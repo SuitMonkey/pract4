@@ -20,15 +20,13 @@ public class Main {
     public static void main(String [] args)
     {
         staticFileLocation("recursos");
-        bd.subir();
+
         Configuration configuration = new Configuration();
         configuration.setClassForTemplateLoading(Main.class, "/templates");
         FreeMarkerEngine freeMarkerEngine = new FreeMarkerEngine( configuration );
 
 
         //Administradores
-//    bd.insertarUsuario(new Usuario("francis","Francis Cáceres","1234",true,true));
-
 
 
         get("/", (request, response) -> {
