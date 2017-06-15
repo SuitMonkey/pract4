@@ -50,7 +50,7 @@ public class Manejador<T> {
         }
     }
 
-    public void eliminar(T entidadId){
+    public void eliminar(Object entidadId){
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         try {
