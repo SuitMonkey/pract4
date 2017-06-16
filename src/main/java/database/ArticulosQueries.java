@@ -32,17 +32,18 @@ public class ArticulosQueries extends Manejador<Articulo> {
     }
 
     public List<Articulo> findAllByTagsSorted(String tag){
-        List<Articulo> lista = new ArrayList<>();
+        List<Articulo> listaA = new ArrayList<>();
         List<Articulo> bubble = ArticulosQueries.getInstancia().findAll();
 
         for (Articulo a : bubble){
             for (Etiqueta e : a.getListaEtiqueta()){
                 if(e.getEtiqueta().equals(tag)){
-                    lista.add(a);
+                    listaA.add(a);
+                    break;
                 }
             }
         }
-        return lista;
+        return listaA;
     }
 
     public void noLike(Long idA, int idL){

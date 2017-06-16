@@ -99,7 +99,7 @@
 <footer>
     <div class="row">
         <div class="col-lg-12">
-            <p>Copyright &copy; Francis 2017</p>
+            <p>Copyright &copy; Francis y Jesus 2017</p>
         </div>
     </div>
     <!-- /.row -->

@@ -34,7 +34,7 @@
             var variable= "${sesion}";
             $('#administrar').hide();
 
-            if(variable==="true") {
+            if(variable ==="true") {
 
                 $('.login').hide();
                 $('.logout').show();
@@ -194,7 +194,7 @@
                         <paginasgt></paginasgt>
 
                 </#if>
-                <p>Copyright &copy; Ernesto y Francis 2016</p>
+                <p>Copyright &copy; Francis y Jesus 2017</p>
             </div>
             <!-- /.col-lg-12 -->
         </div>

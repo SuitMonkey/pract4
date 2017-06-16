@@ -40,7 +40,7 @@
             $("#button_logout").hide();
 
             if(variable==="true"){
-                console.log("dita vaina!~");
+
                 if ( ("${user.getUsername()}" === "${articulo.getAutor().getUsername()}") ||
                         ("${user.isAdministrador()?c}" === "true") )
                 {
@@ -295,21 +295,7 @@
         <!-- Blog Sidebar Widgets Column -->
         <div class="col-md-4">
 
-            <!-- Blog Search Well -->
-            <div class="well">
-                <h4>Blog Search</h4>
-                <div class="input-group">
-                    <input type="text" class="form-control">
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" type="button">
-                                <span class="glyphicon glyphicon-search"></span>
-                        </button>
-                        </span>
-                </div>
-                <!-- /.input-group -->
-            </div>
-
-            <!-- Blog Categories Well -->
+        <!-- Blog Categories Well -->
 
             <div class="well">
                 <h4>Blog Categories</h4>
@@ -335,7 +321,7 @@
     <footer>
         <div class="row">
             <div class="col-lg-12">
-                <p>Copyright &copy; Francis 2017</p>
+                <p>Copyright &copy; Francis y Jesus 2017</p>
             </div>
         </div>
         <!-- /.row -->

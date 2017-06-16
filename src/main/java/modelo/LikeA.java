@@ -11,7 +11,7 @@ public class LikeA implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private boolean isLike;
+    private Boolean isLike;
     @ManyToOne
     private Articulo articulo;
     @ManyToOne

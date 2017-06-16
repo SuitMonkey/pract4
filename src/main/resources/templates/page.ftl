@@ -197,7 +197,7 @@
                     </#if>
                 </#list>
                     <paginasgt></paginasgt>
-                    <p>Copyright &copy; Ernesto y Francis 2016</p>
+                    <p>Copyright &copy; Francis y Jesus 2017</p>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>

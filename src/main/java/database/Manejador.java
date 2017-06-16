@@ -55,7 +55,7 @@ public class Manejador<T> {
         em.getTransaction().begin();
         try {
             T entidad = em.find(claseEntidad,entidadId);
-            em.remove(entidad);
+            em.remove(em.contains(entidad)? entidad : em.merge(entidad));
         }catch (Exception e){
             em.getTransaction().rollback();
             e.printStackTrace();

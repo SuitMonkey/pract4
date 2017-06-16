@@ -87,7 +87,7 @@
         <div class="rowT" >
             <div class="col-lg-12" >
                 <hr>
-                <p>Copyright &copy; Francis 2017</p>
+                <p>Copyright &copy; Francis y Jesus 2017</p>
             </div>
         </div>
         <!-- /.row -->

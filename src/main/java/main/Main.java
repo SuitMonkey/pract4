@@ -2,13 +2,9 @@ package main;
 /**
  * Created by Francis Cáceres on 3/6/2017.
  */
-import database.ArticulosQueries;
-import database.UsuarioQueries;
+import database.*;
 import freemarker.template.Configuration;
-import modelo.Articulo;
-import modelo.Comentario;
-import modelo.Etiqueta;
-import modelo.Usuario;
+import modelo.*;
 import spark.ModelAndView;
 import spark.Session;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -30,13 +26,9 @@ public class Main {
         configuration.setClassForTemplateLoading(Main.class, "/templates");
         FreeMarkerEngine freeMarkerEngine = new FreeMarkerEngine( configuration );
 
-        Usuario usr = new Usuario("f","","",true);
-
         //Administradores
-//        try{
-//            UsuarioQueries.getInstancia().find(usr.getUsername());}catch(Exception e) {
-//            UsuarioQueries.getInstancia().crear(new Usuario("yiyi", "Djidjelly Siclait", "1234", true));
-//        }
+        //UsuarioQueries.getInstancia().crear(new Usuario("f", "Francis Cáceres", "1234", true));
+
 
         get("/", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -87,17 +79,23 @@ public class Main {
             return new ModelAndView(attributes, "home.ftl");
         }, freeMarkerEngine);
 
-       /* post("/", (request, response) -> {
+        post("/", (request, response) -> {
             Session sesion = request.session(true);
-
             Map<String, Object> attributes = new HashMap<>();
-
-            attributes.put("sesion","true");
-
-            attributes.put("user",(sesion.attribute("currentUser")==null)?new Usuario("","","",false,false):((Usuario) sesion.attribute("currentUser")));
 
             String insertArt = request.queryParams("crearArt");
             String elimArt = request.queryParams("eliminarArt");
+
+            String busqueda = request.queryParams("busqueda");
+            if(busqueda != null){
+                List<Etiqueta> tag = EtiquetaQueries.getInstancia().findAll();
+                if(tag != null && tag.size()>0){
+
+                    response.redirect("/tags/"+busqueda+"/page/1");
+                }else attributes.put("EtiqNotFound","Etiqueta no encontrada.");
+
+                return new ModelAndView(attributes, "home.ftl");
+            }
 
             if(insertArt != null) {
                 String titulo = request.queryParams("titulo");
@@ -105,28 +103,138 @@ public class Main {
                 String etiquetas = request.queryParams("area-etiqueta");
                 ArrayList<Etiqueta> etiq = new ArrayList<Etiqueta>();
                 for (String eti : etiquetas.split(",")) {
-                    etiq.add(new Etiqueta(0, eti));
+                    etiq.add(new Etiqueta(eti));
                     // System.out.println(eti);
                 }
 
+                Usuario user = sesion.attribute("currentUser");
 
-                Articulo art = new Articulo(15, titulo, texto, sesion.attribute("currentUser"), null, null, etiq);
-                bd.insertarArticulo(art);
+                Articulo art = new Articulo( titulo, texto, sesion.attribute("currentUser"), new ArrayList<Comentario>(), etiq,new ArrayList<LikeA>());
+                ArticulosQueries.getInstancia().crear(art);
+                for (String eti : etiquetas.split(",")) {
+                    EtiquetaQueries.getInstancia().crear(new Etiqueta(eti, (Articulo) ArticulosQueries.getInstancia().find(art.getId())));
+                }
             }
             else {
                 if (elimArt != null)
                 {
-                    int elim = Integer.parseInt(request.queryParams("elim"));
-
-                    //System.out.println(elim);
-                    bd.eliminarArticulo(elim);
-
-
+                    Long elim = Long.parseLong(request.queryParams("elim"));
+                    ArticulosQueries.getInstancia().eliminar(elim);
                 }
 
             }
-            attributes.put("articulos",bd.getArticulos());
-            return new ModelAndView(attributes, "home.ftl");
+            response.redirect("/");
+            return null;
+        }, freeMarkerEngine);
+
+        get("/page/:pagina", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+
+            Session session = request.session(true);
+            Boolean usuario = session.attribute("sesion");
+            attributes.put("user",(session.attribute("currentUser")==null)?new Usuario("","","",false):((Usuario) session.attribute("currentUser")));
+
+            int pagina = Integer.valueOf(request.params("pagina"));
+
+            Boolean admin =session.attribute("admin");
+            attributes.put("sesion","false");
+
+            if(admin!=null) {
+                if(admin) {
+                    attributes.put("greetings","Saludos Administardor.");
+                    attributes.put("sesion","true");
+                }
+            }
+            else {
+                if(usuario!=null){
+                    if(usuario)
+                        attributes.put("sesion","true");
+                }
+                else
+                    attributes.put("estado","fuera");
+            }
+
+            List<Articulo> articulos = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
+            attributes.put("articulos",articulos);
+
+            //paginacion
+            if(pagina== 0 && getCantPag(articulos.size())>1)
+                attributes.put("irAdelante","si");
+            else attributes.put("irAdelante","no");
+
+            if(pagina != 0&& pagina==(int)getCantPag(articulos.size()-1))
+                attributes.put("irAtras","si");
+            else attributes.put("irAtras","no");
+
+
+            int [] paginas = new int [(int)getCantPag(ArticulosQueries.getInstancia().findAllSorted().size())];
+            for(int i = 1 ;i <= paginas.length;i++)
+            {
+                if(pagina== i)
+                    continue;
+                paginas[i-1]= i;
+            }
+
+            attributes.put("paginaActual",Integer.toString(pagina));
+
+            attributes.put("paginas",paginas);
+            return new ModelAndView(attributes, "page.ftl");
+        }, freeMarkerEngine);
+
+        get("tags/:tag/page/:pagina", (request, response) -> {
+
+            Map<String, Object> attributes = new HashMap<>();
+
+            Session session = request.session(true);
+            Boolean usuario = session.attribute("sesion");
+            attributes.put("user",(session.attribute("currentUser")==null)?new Usuario("","","",false):((Usuario) session.attribute("currentUser")));
+
+            int pagina = Integer.valueOf(request.params("pagina"));
+
+            Boolean admin =session.attribute("admin");
+            attributes.put("sesion","false");
+
+            if(admin!=null) {
+                if(admin) {
+                    attributes.put("sesion","true");
+                }
+            }
+            else {
+                if(usuario!=null){
+                    if(usuario)
+                        attributes.put("sesion","true");
+                }
+                else
+                    attributes.put("estado","fuera");
+            }
+
+            String tag = request.params("tag");
+            List<Articulo> articulos = paginacion(ArticulosQueries.getInstancia().findAllByTagsSorted(tag),pagina);
+            attributes.put("articulos",articulos);
+
+            //paginacion
+            if(pagina == 0 && getCantPag(articulos.size())>1)
+                attributes.put("irAdelante","si");
+            else attributes.put("irAdelante","no");
+
+            if(pagina != 0&& pagina==(int)getCantPag(articulos.size()-1))
+                attributes.put("irAtras","si");
+            else attributes.put("irAtras","no");
+
+
+            int [] paginas = new int [(int)getCantPag(articulos.size())];
+            for(int i = 1 ;i <= paginas.length;i++)
+            {
+                if(pagina== i)
+                    continue;
+                paginas[i-1]= i;
+            }
+
+            attributes.put("paginaActual",Integer.toString(pagina));
+            attributes.put("tag",tag);
+
+            attributes.put("paginas",paginas);
+            return new ModelAndView(attributes, "pageT.ftl");
         }, freeMarkerEngine);
 
         get("/articulos", (request, response) -> {
@@ -135,15 +243,53 @@ public class Main {
 
             attributes.put("sesion",(sesion.attribute("sesion")==null)?"false":sesion.attribute("sesion").toString());
 
-            attributes.put("user",(sesion.attribute("currentUser")==null)?new Usuario("","","",false,false):((Usuario) sesion.attribute("currentUser")));
+            attributes.put("user",(sesion.attribute("currentUser")==null)?new Usuario("","","",false):((Usuario) sesion.attribute("currentUser")));
 
-            int id = Integer.valueOf(request.queryParams("id"));
+            Long id = Long.valueOf(request.queryParams("id"));
 
-
-            attributes.put("comentarios",bd.getComentariosArt(id));
-            attributes.put("articulo",bd.getArticulo(id));
+            Articulo ar = ArticulosQueries.getInstancia().find(id);
+            attributes.put("comentarios",ar.getListaComentario());
+            attributes.put("articulo",ar);
             attributes.put("id",request.queryParams("id"));
-            attributes.put("etiquetas",bd.getEtiquetasArt(id));
+            attributes.put("etiquetas",ar.getListaEtiqueta());
+
+            //Parte de Likes
+            int totalLA = 0,totalDA = 0;
+
+            for(LikeA l : LikeAQueries.getInstancia().findAll()) {
+                if(l.getIsLike() && l.getArticulo().getId() == id) {
+                    totalLA++;
+                }
+                if(!l.getIsLike() && l.getArticulo().getId() == id) {
+                    totalDA++;
+                }
+            }
+
+            String LikeArticulo = null;
+            if(sesion.attribute ("currentUser") != null){
+                for(LikeA lc : ar.getLikes()) {
+                    if(lc.getUsuario().getUsername().equals(((Usuario) sesion.attribute ("currentUser")).getUsername())){
+                        if(lc.getIsLike()) {
+                            LikeArticulo = "Like";
+                            attributes.put("dioLike", "");
+                        }
+                        else {
+                            LikeArticulo = "disLike";
+                            attributes.put("dioDisLike","");
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if(LikeArticulo == null)
+            {
+                attributes.put("aunNada",totalLA);
+                LikeArticulo = "noLike";
+            }
+
+            attributes.put("totalLA",totalLA);
+            attributes.put("totalDA",totalDA);
 
 
             return new ModelAndView(attributes, "articulo.ftl");
@@ -152,54 +298,100 @@ public class Main {
         post("/articulos", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
             Session sesion = request.session(true);
-            attributes.put("sesion","true");
 
-            attributes.put("user",(sesion.attribute("currentUser")==null)?"false":((Usuario) sesion.attribute("currentUser")));
 
-            String editarArt = null;
-            editarArt = (request.queryParams("editarArt")==null)?"null": "nonull";
+            String editarArt = (request.queryParams("editarArt")==null)?"null": "nonull";
             String elimC = request.queryParams("eliminarComentario");
             String comen = request.queryParams("comentario");
-            int id = Integer.parseInt(request.queryParams("idArticulo"));
-            //System.out.println("holaaaerrror");
-
+            Long id = Long.valueOf(request.queryParams("idArticulo"));
 
             if(editarArt.equals("nonull")) {
+                Articulo editArt = ArticulosQueries.getInstancia().find(id);
+                List<Etiqueta> rep = editArt.getListaEtiqueta();
+                limpiaEtiq(rep);
                 String titulo = request.queryParams("titulo");
                 String texto = request.queryParams("area-articulo");
                 String etiquetas = request.queryParams("area-etiqueta");
-                int idArt = Integer.parseInt(request.queryParams("idArticulo"));
-                ArrayList<Etiqueta> etiq = new ArrayList<Etiqueta>();
+                ArrayList<Etiqueta> etiq = new ArrayList<>();
                 for (String eti : etiquetas.split(",")) {
-                    etiq.add(new Etiqueta(0, eti));
-                    //System.out.println(eti);
+                    if(eti.equals(" ")) {
+                        continue;
+                    }
+                    etiq.add(new Etiqueta(eti));
+                    EtiquetaQueries.getInstancia().crear(new Etiqueta(eti,ArticulosQueries.getInstancia().find(id)));
                 }
-                Articulo art = new Articulo(idArt, titulo, texto, sesion.attribute("currentUser"), null, null, etiq);
-                //System.out.println(art.getId()+ " "+art.getTitulo());
-                bd.actualizarArticulo(art);
+                Articulo art = new Articulo( titulo, texto, sesion.attribute("currentUser"), new ArrayList<>(), etiq, new ArrayList<>());
+                art.setId(id);
+                ArticulosQueries.getInstancia().editar(art);
             }
             else{
-                //System.out.println("break");
                 if(elimC!=null)
                 {
-                    bd.eliminarComentario(Integer.valueOf(request.queryParams("eliminarComentarioV")));
+                    int idC =Integer.valueOf(request.queryParams("eliminarComentarioV"));
+                    ComentarioQueries.getInstancia().eliminar(idC);
                 }
                 else {
                     if (comen != null || !comen.equals("")) {
-                        Comentario com = new Comentario(0, comen, ((Usuario)sesion.attribute("currentUser")), bd.getArticulo(id));
-                        bd.insertarComentario(com, id);
+                        Comentario com = new Comentario(comen, sesion.attribute("currentUser"),ArticulosQueries.getInstancia().find(id), new ArrayList<>());
+                        ComentarioQueries.getInstancia().crear(com);
 
                     }
                 }
             }
 
+            response.redirect("/articulos?id="+id);
 
-            attributes.put("articulo",bd.getArticulo(id));
-            attributes.put("comentarios",bd.getComentariosArt(id));
-            attributes.put("id",id);
-            attributes.put("etiquetas",bd.getEtiquetasArt(id));
+            return null;
+        }, freeMarkerEngine);
 
-            return new ModelAndView(attributes, "articulo.ftl");
+        get("/articulos/:art/:like", (request, response) -> {
+            Session sesion = request.session(true);
+            String mode = request.params("like");
+            Articulo art = ArticulosQueries.getInstancia().find(Long.valueOf(request.params("art")));
+
+            //elim viejo like
+            int idLike = (art.getTHeLike(sesion.attribute("currentUser")));
+
+            if(idLike!=-1){
+                ArticulosQueries.getInstancia().noLike(art.getId(),idLike);
+            }
+
+            if("likeA".equals(mode)) {
+                LikeA like = new LikeA(true,art,sesion.attribute("currentUser"));
+                art.getLikes().add(like);
+                LikeAQueries.getInstancia().crear(like);
+            }
+            else if ("dislikeA".equals(mode)) {
+
+                LikeA like = new LikeA(false,art,sesion.attribute("currentUser"));
+                art.getLikes().add(like);
+                LikeAQueries.getInstancia().crear(like);
+            }
+
+            response.redirect("/articulos?id="+art.getId());
+
+            return null;
+        }, freeMarkerEngine);
+
+        get("/articulos/:art/:co/:like", (request, response) -> {
+            Session sesion = request.session(true);
+            String mode = request.params("like");
+            Articulo art = ArticulosQueries.getInstancia().find(Long.valueOf(request.params("art")));
+            Comentario comentario = ComentarioQueries.getInstancia().find(Integer.valueOf(request.params("co")));
+
+            ComentarioQueries.getInstancia().noLikeC(comentario.getId(), (Usuario)sesion.attribute("currentUser"));
+            if("likeC".equals(mode)) {
+                LikeC like = new LikeC(true,comentario,(Usuario)sesion.attribute("currentUser"));
+                LikeCQueries.getInstancia().crear(like);
+            }
+            else  if("dislikeC".equals(mode)) {
+                LikeC like = new LikeC(false,comentario,(Usuario)sesion.attribute("currentUser"));
+                LikeCQueries.getInstancia().crear(like);
+            }
+
+            response.redirect("/articulos?id="+art.getId());
+
+            return null;
         }, freeMarkerEngine);
 
         get("/login", (request, response) -> {
@@ -214,7 +406,7 @@ public class Main {
 
             if(session.attribute("sesion"))
             {
-                Usuario u= bd.getUsuario(request.queryParams("user"));
+                Usuario u = UsuarioQueries.getInstancia().find(request.queryParams("user"));
 
                 attributes.put("message","Bienvenido " + u.getNombre());
                 attributes.put("redireccionar", "si");
@@ -232,9 +424,7 @@ public class Main {
 
         get("/administrarUsuarios", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
-
-
-            attributes.put("usuarios",bd.getUsuarios());
+            attributes.put("usuarios",UsuarioQueries.getInstancia().findAll());
 
             return new ModelAndView(attributes, "administrarUsuarios.ftl");
         }, freeMarkerEngine);
@@ -245,8 +435,7 @@ public class Main {
             if(request.queryParams("elim")!=null)
             {
                 String usernam = request.queryParams("elim");
-                //System.out.println(usernam);
-                bd.eliminarUsuario(usernam);
+                UsuarioQueries.getInstancia().eliminar(new Usuario(usernam,"","",false));
             }
             else
             {
@@ -256,12 +445,11 @@ public class Main {
                 String pass = request.queryParams("pass");
                 Boolean admin = (request.queryParams("admin") ==null)? false:true;
 
-                //System.out.println(request.queryParams("admin"));
-                Usuario usuario = new Usuario(user,nombre,pass,admin,true);
-                bd.insertarUsuario(usuario);
+                Usuario usuario = new Usuario(user,nombre,pass,admin);
+                UsuarioQueries.getInstancia().crear(usuario);
             }
 
-            attributes.put("usuarios",bd.getUsuarios());
+            attributes.put("usuarios",UsuarioQueries.getInstancia().findAll());
 
             return new ModelAndView(attributes, "administrarUsuarios.ftl");
         }, freeMarkerEngine);
@@ -271,18 +459,25 @@ public class Main {
 
             String user = request.queryParams("user");
             String pass = request.queryParams("pass");
-
-            if(bd.goodUsernamePassword(user,pass))
-            {
-                session.attribute("sesion", true);
-                session.attribute("currentUser", bd.getUsuario(user));
+            Usuario comprobar = UsuarioQueries.getInstancia().find(user);
+            if(comprobar!=null) {
+                if (comprobar.getPassword().equals(pass)) {
+                    session.attribute("sesion", true);
+                    session.attribute("currentUser", comprobar);
+                }
             }
+            else session.attribute("sesion", false);
+
+        });
+
+        before("/page/:pagina",(request, response) -> {
+            int pagina = Integer.valueOf(request.params(":pagina"));
+            int max = (int)getCantPag(ArticulosQueries.getInstancia().findAllSorted().size());
+            if(pagina<1)
+                response.redirect("/");
             else
-                session.attribute("sesion", false);
-            //response.redirect("/zonaadmin/");
-
-
-
+            if(pagina> max)
+                response.redirect("/page/"+max);
         });
 
         get("/clear", (request, response) -> {
@@ -290,7 +485,7 @@ public class Main {
             request.session().removeAttribute("currentUser");
             response.redirect("/");
             return null;
-        });*/
+        });
 
     }
 
@@ -309,6 +504,12 @@ public class Main {
     public static double getCantPag(int size)
     {
         return Math.ceil(  ((double)size)/ 5 );
+    }
+
+    public static void limpiaEtiq(List<Etiqueta> le) {
+        for(Etiqueta e : le) {
+            EtiquetaQueries.getInstancia().eliminar(e.getId());
+        }
     }
 
 

@@ -74,7 +74,7 @@
         <div class="rowT" >
             <div class="col-lg-12" >
                 <hr>
-                <p>Copyright &copy; Your Website 2017</p>
+                <p>Copyright &copy; Francis y Jesus 2017</p>
             </div>
         </div>
         <!-- /.row -->

@@ -11,7 +11,7 @@ public class LikeC implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private boolean isLike;
+    private Boolean isLike;
     @ManyToOne
     private Comentario comentario;
     @ManyToOne
@@ -38,7 +38,7 @@ public class LikeC implements Serializable {
     }
 
     public void setIsLike(Boolean like) {
-        like = like;
+        this.isLike = like;
     }
 
     public Comentario getComentario() {
