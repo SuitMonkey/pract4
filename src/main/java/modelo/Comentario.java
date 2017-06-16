@@ -14,7 +14,7 @@ public class Comentario implements Serializable {
     private Usuario autor;
     @ManyToOne
     private Articulo articulo;
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "Coment",cascade = CascadeType.REMOVE)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "comentario",cascade = CascadeType.REMOVE)
     private List<LikeC> likes;
 
     public Comentario() {
