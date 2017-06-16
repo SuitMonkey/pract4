@@ -16,6 +16,7 @@ import static spark.debug.DebugScreen.enableDebugScreen;
 
 //TODO: Teminar de arreglar el main
 public class Main {
+    public static int pa = 1;
 
     public static void main(String [] args)
     {
@@ -37,7 +38,6 @@ public class Main {
 
             attributes.put("user",(session.attribute("currentUser")==null)?new Usuario("","","",false):((Usuario) session.attribute("currentUser")));
 
-            int pagina = 1;
             Boolean admin = session.attribute("admin");
 
             attributes.put("sesion","false");
@@ -60,8 +60,11 @@ public class Main {
                 }
             }
 
-            List<Articulo> ar = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
+            int pagina = 1;
+//            paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina)
+            List<Articulo> ar = ArticulosQueries.getInstancia().findLimitedSorted();
             attributes.put("articulos",ar);
+
 
             int[] paginas = new int[(int)getCantPag(ArticulosQueries.getInstancia().findAllSorted().size())];
             for (int i = 1; i <= paginas.length; i++ ){
@@ -107,7 +110,6 @@ public class Main {
                     // System.out.println(eti);
                 }
 
-                Usuario user = sesion.attribute("currentUser");
 
                 Articulo art = new Articulo( titulo, texto, sesion.attribute("currentUser"), new ArrayList<Comentario>(), etiq,new ArrayList<LikeA>());
                 ArticulosQueries.getInstancia().crear(art);
@@ -154,28 +156,31 @@ public class Main {
                     attributes.put("estado","fuera");
             }
 
-            List<Articulo> articulos = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
+            //List<Articulo> articulos = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
+            pa = 5 * pagina;
+            List<Articulo>articulos = ArticulosQueries.getInstancia().findLimitedSorted();
             attributes.put("articulos",articulos);
+            pa = 1;
 
             //paginacion
-            if(pagina== 0 && getCantPag(articulos.size())>1)
-                attributes.put("irAdelante","si");
-            else attributes.put("irAdelante","no");
-
-            if(pagina != 0&& pagina==(int)getCantPag(articulos.size()-1))
-                attributes.put("irAtras","si");
-            else attributes.put("irAtras","no");
+//            if(pagina == 0 && getCantPag(articulos.size())>1)
+//                attributes.put("irAdelante","si");
+//            else attributes.put("irAdelante","no");
+//
+//            if(pagina != 0&& pagina==(int)getCantPag(articulos.size()-1))
+//                attributes.put("irAtras","si");
+//            else attributes.put("irAtras","no");
 
 
             int [] paginas = new int [(int)getCantPag(ArticulosQueries.getInstancia().findAllSorted().size())];
             for(int i = 1 ;i <= paginas.length;i++)
             {
-                if(pagina== i)
+                if(pagina == i)
                     continue;
                 paginas[i-1]= i;
             }
 
-            attributes.put("paginaActual",Integer.toString(pagina));
+//            attributes.put("paginaActual",Integer.toString(pagina));
 
             attributes.put("paginas",paginas);
             return new ModelAndView(attributes, "page.ftl");
@@ -379,13 +384,13 @@ public class Main {
             Articulo art = ArticulosQueries.getInstancia().find(Long.valueOf(request.params("art")));
             Comentario comentario = ComentarioQueries.getInstancia().find(Integer.valueOf(request.params("co")));
 
-            ComentarioQueries.getInstancia().noLikeC(comentario.getId(), (Usuario)sesion.attribute("currentUser"));
+            ComentarioQueries.getInstancia().noLikeC(comentario.getId(), sesion.attribute("currentUser"));
             if("likeC".equals(mode)) {
-                LikeC like = new LikeC(true,comentario,(Usuario)sesion.attribute("currentUser"));
+                LikeC like = new LikeC(true,comentario,sesion.attribute("currentUser"));
                 LikeCQueries.getInstancia().crear(like);
             }
             else  if("dislikeC".equals(mode)) {
-                LikeC like = new LikeC(false,comentario,(Usuario)sesion.attribute("currentUser"));
+                LikeC like = new LikeC(false,comentario,sesion.attribute("currentUser"));
                 LikeCQueries.getInstancia().crear(like);
             }
 

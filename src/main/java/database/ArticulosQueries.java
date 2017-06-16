@@ -1,5 +1,6 @@
 package database;
 
+import main.Main;
 import modelo.Articulo;
 import modelo.Etiqueta;
 import modelo.LikeA;
@@ -27,6 +28,15 @@ public class ArticulosQueries extends Manejador<Articulo> {
     public List<Articulo> findAllSorted(){
         EntityManager em = getEntityManager();
         Query query = em.createNamedQuery("Articulo.findAllSorted");
+        List<Articulo> lista = query.getResultList();
+        return lista;
+    }
+
+    public List<Articulo> findLimitedSorted(){
+        EntityManager em = getEntityManager();
+        Query query = em.createQuery("SELECT a FROM Articulo a order by  a.fecha desc")
+                .setFirstResult(Main.pa)
+                .setMaxResults(5);
         List<Articulo> lista = query.getResultList();
         return lista;
     }

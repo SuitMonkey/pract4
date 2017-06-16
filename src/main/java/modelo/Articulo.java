@@ -8,7 +8,7 @@ import java.util.List;
 @Entity
 @NamedQueries(
         {@NamedQuery( name =  "Articulo.findAllSorted", query = "SELECT a FROM Articulo a order by  a.fecha desc"),
-        @NamedQuery( name =  "Articulo.findAllByTagsSorted", query = "SELECT a FROM Articulo a WHERE :tag member of  a.listaEtiqueta order by a.fecha desc")})
+         @NamedQuery( name =  "Articulo.findAllByTagsSorted", query = "SELECT a FROM Articulo a WHERE :tag member of  a.listaEtiqueta order by a.fecha desc")})
 public class Articulo implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
