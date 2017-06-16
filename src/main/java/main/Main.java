@@ -2,6 +2,8 @@ package main;
 /**
  * Created by Francis Cáceres on 3/6/2017.
  */
+import database.ArticulosQueries;
+import database.UsuarioQueries;
 import freemarker.template.Configuration;
 import modelo.Articulo;
 import modelo.Comentario;
@@ -14,35 +16,43 @@ import spark.template.freemarker.FreeMarkerEngine;
 import java.util.*;
 
 import static spark.Spark.*;
+import static spark.debug.DebugScreen.enableDebugScreen;
 
+//TODO: Teminar de arreglar el main
 public class Main {
 
     public static void main(String [] args)
     {
         staticFileLocation("recursos");
+        enableDebugScreen();
 
         Configuration configuration = new Configuration();
         configuration.setClassForTemplateLoading(Main.class, "/templates");
         FreeMarkerEngine freeMarkerEngine = new FreeMarkerEngine( configuration );
 
+        Usuario usr = new Usuario("f","","",true);
 
         //Administradores
-
+//        try{
+//            UsuarioQueries.getInstancia().find(usr.getUsername());}catch(Exception e) {
+//            UsuarioQueries.getInstancia().crear(new Usuario("yiyi", "Djidjelly Siclait", "1234", true));
+//        }
 
         get("/", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
             Session session = request.session(true);
             Boolean usuario = session.attribute("sesion");
 
-            attributes.put("user",(session.attribute("currentUser")==null)?new Usuario("","","",false,false):((Usuario) session.attribute("currentUser")));
+            attributes.put("user",(session.attribute("currentUser")==null)?new Usuario("","","",false):((Usuario) session.attribute("currentUser")));
 
-            Boolean admin =session.attribute("admin");
-            //System.out.println(" "+ session.attribute("usuario"));
+            int pagina = 1;
+            Boolean admin = session.attribute("admin");
+
             attributes.put("sesion","false");
+
 
             if(admin!=null) {
                 if(admin) {
-                    attributes.put("greetings","Saludos Administardor.");
                     attributes.put("sesion","true");
                 }
             }
@@ -50,23 +60,34 @@ public class Main {
             {
                 if(usuario!=null){
                     if(usuario) {
-                        attributes.put("greetings","Saludos usuario mortal.");
                         attributes.put("sesion","true");
                     }
                 }
                 else {
-                    attributes.put("greetings","");
                     attributes.put("estado","fuera");
                 }
             }
 
-            attributes.put("articulos",bd.getArticulos());
+            List<Articulo> ar = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
+            attributes.put("articulos",ar);
 
+            int[] paginas = new int[(int)getCantPag(ArticulosQueries.getInstancia().findAllSorted().size())];
+            for (int i = 1; i <= paginas.length; i++ ){
+                if(pagina == i){
+                    continue;
+                }
+                paginas[i-1] = i;
+            }
+
+            attributes.put("irAdelante","si");
+            attributes.put("paginaActual","1");
+
+            attributes.put("paginas",paginas);
 
             return new ModelAndView(attributes, "home.ftl");
         }, freeMarkerEngine);
 
-        post("/", (request, response) -> {
+       /* post("/", (request, response) -> {
             Session sesion = request.session(true);
 
             Map<String, Object> attributes = new HashMap<>();
@@ -269,7 +290,26 @@ public class Main {
             request.session().removeAttribute("currentUser");
             response.redirect("/");
             return null;
-        });
+        });*/
 
     }
+
+    public static List<Articulo> paginacion(List<Articulo> la, int pagina)
+    {
+        List<Articulo> articulosPagina = new ArrayList<>();
+
+        int rate = 5 *(pagina-1);
+        for(int i =  rate; i < rate+5 && i< la.size(); i++ )
+        {
+            articulosPagina.add(la.get(i));
+        }
+        return articulosPagina;
+    }
+
+    public static double getCantPag(int size)
+    {
+        return Math.ceil(  ((double)size)/ 5 );
+    }
+
+
 }

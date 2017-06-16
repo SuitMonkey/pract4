@@ -5,6 +5,7 @@ import modelo.Etiqueta;
 import modelo.LikeA;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,13 @@ public class ArticulosQueries extends Manejador<Articulo> {
             instancia = new ArticulosQueries();
         }
         return instancia;
+    }
+
+    public List<Articulo> findAllSorted(){
+        EntityManager em = getEntityManager();
+        Query query = em.createNamedQuery("Articulo.findAllSorted");
+        List<Articulo> lista = query.getResultList();
+        return lista;
     }
 
     public List<Articulo> findAllByTagsSorted(String tag){

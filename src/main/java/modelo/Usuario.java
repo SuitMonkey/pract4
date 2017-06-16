@@ -7,7 +7,7 @@ import java.util.List;
 @Entity
 @NamedQueries({@NamedQuery(name = "Usuario.findAllByUsername", query = "SELECT a FROM Usuario a WHERE a.username like :username")})
 public class Usuario implements Serializable{
-
+    @Id
     private String username;
     private String nombre;
     private String password;
