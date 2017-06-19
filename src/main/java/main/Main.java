@@ -16,7 +16,7 @@ import static spark.debug.DebugScreen.enableDebugScreen;
 
 //TODO: Teminar de arreglar el main
 public class Main {
-    public static int pa = 1;
+    public static int pa = 0;
 
     public static void main(String [] args)
     {
@@ -157,10 +157,10 @@ public class Main {
             }
 
             //List<Articulo> articulos = paginacion(ArticulosQueries.getInstancia().findAllSorted(),pagina);
-            pa = 5 * pagina;
+            pa = 5 * (pagina-1);
             List<Articulo>articulos = ArticulosQueries.getInstancia().findLimitedSorted();
             attributes.put("articulos",articulos);
-            pa = 1;
+            pa = 0      ;
 
             //paginacion
 //            if(pagina == 0 && getCantPag(articulos.size())>1)
