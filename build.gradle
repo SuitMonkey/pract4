@@ -12,7 +12,7 @@ repositories {
 dependencies {
     def freemarkerVersion = "2.3.23"
 
-    compile group: 'com.h2database', name: 'h2', version: '1.4.194'
+    compile group: 'com.h2database', name: 'h2', version: '1.4.195'
 
     compile group: 'com.sparkjava', name: 'spark-core', version: '2.5'
     compile group: 'com.sparkjava', name: 'spark-template-freemarker', version: '2.0.0'

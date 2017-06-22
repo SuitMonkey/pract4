@@ -160,7 +160,7 @@ public class Main {
             pa = 5 * (pagina-1);
             List<Articulo>articulos = ArticulosQueries.getInstancia().findLimitedSorted();
             attributes.put("articulos",articulos);
-            pa = 0      ;
+            pa = 0;
 
             //paginacion
 //            if(pagina == 0 && getCantPag(articulos.size())>1)
